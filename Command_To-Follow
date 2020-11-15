@@ -1,0 +1,187 @@
+Command which have to follow before initiating creating Hadoop environment and user.
+Make sure your system of linux is updated this will help to get all the possible thing installed.
+
+Pre-requisite  thing to do before user creation
+sudo apt-get update
+sudo apt-get upgrade
+
+check your java version and update that as well
+java -version
+
+Installing JAVA
+sudo apt-get install default-jdk
+
+again check the make sure it work fine
+java -version
+
+now its time to Install SSH server which will let us use LOCALHOST
+sudo apt update
+sudo apt install openshh-server
+sudo apt-get install ssh
+ 
+Now Its time for the USER creation
+
+sudo addgroup hadoop
+sudo adduser -ingroup hadoop hdusr (hdusr can be any name according to you)
+ 
+sudo adduser hdusr sudo
+sudo visudo
+
+and add this line at the end of the file
+hdusr ALL=(ALL) ALL
+ 
+ 
+After this change the user to hdusr
+su – hdusr
+
+SSH Key Generation for User hdusr
+This will create empty password RSA key pair
+
+ssh-keygen -t rsa -P “”
+ 
+Make sure all the double quotes look like this // in my word_file you will see the screenshot as well
+ 
+Enable SSH access with the key generated in the previous step
+sudo cat /home/”your username”/.ssh/id_rsa.pub >> /home/”your username”/.shh/authorized_keys
+
+NOW REBOOT YOUR SYSTEM
+sudo reboot now
+
+Now Open terminal and login to your hadoop user
+su – shiv
+
+SSH setup by connecting to local machine
+ssh localhost
+
+Download stable hadoop version and extract it
+wget https://archive.apache.org/dist/hadoop/core/hadoop-2.7.2/hadoop-2.7.2.tar.gz
+tar xzf hadoop-2.7.2.tar.gz
+
+Now CONFIGURE HADOOP ENVIRONMENT VARIABLE (bashrc)
+---write below code in the bashrc file-- 
+sudo nano .bashrc
+#Hadoop Related Options
+export HADOOP_HOME=/home/”your hadoop username”/hadoop-3.2.1
+export HADOOP_INSTALL=$HADOOP_HOME
+export HADOOP_MAPRED_HOME=$HADOOP_HOME
+export HADOOP_COMMON_HOME=$HADOOP_HOME
+export HADOOP_HDFS_HOME=$HADOOP_HOME
+export YARN_HOME=$HADOOP_HOME
+export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin
+export HADOOP_OPTS= “-Djava.library.path=$HADOOP_HOME/lib/native” 
+---output---
+  
+shiv@shivam-VirtualBox:~$  tar xzf hadoop-2.7.2.tar.gz
+ 
+shiv@shivam-VirtualBox:~$  sudo nano .bashrc
+ 
+shiv@shivam-VirtualBox:~$ which java
+ 
+shiv@shivam-VirtualBox:~$  readlink -f /usr/bin/java
+ 
+shiv@shivam-VirtualBox:~$  source ~/.bashrc
+shiv@shivam-VirtualBox:~$  sudo nano $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+---write below code in the env.sh file-- 
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+---output---
+ 
+shiv@shivam-VirtualBox:~$  sudo nano $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+shiv@shivam-VirtualBox:~$  sudo nano $HADOOP_HOME/etc/hadoop/core-site.xml
+ 
+---write below code in the core-site file-- 
+<configuration>
+ <property>
+   <name>hadoop.tmp.dir</name>
+ <value>/home/shiv/tmpdata</value>  // after home/”you have to enter your hadoop username”
+</property>
+<property>
+<name>fs.default.name</name>
+<value>hdfs://127.0.0.1:9000</value>
+</property>
+</configuration>
+---output---
+
+shiv@shivam-VirtualBox:~$  sudo nano $HADOOP_HOME/etc/hadoop/hdfs-site.xml
+---write below code in the hdfs-site file-- 
+<configuration> <property>
+<name>dfs.data.dir</name>
+<value>/home/shiv/dfsdata/namenode</value> //shiv = your hadoop user name
+</property>
+<property>
+<name>dfs.data.dir</name>
+<value>/home/shiv/dfsdata/datanode</value> //shiv = your hadoop user name
+</property>
+<property>
+<name>dfs.replication</name>
+<value>1</value>
+</property></configuration>
+---output---
+
+IF THIS KIND OF ERROR COMES IN BETWEEN THEN FOLLOW COMMAND FROM 120
+//shiv@shivam-VirtualBox:~$  sudo mkdir /home/shiv/dfsdata/namenode
+//mkdir: cannot create directory ‘/home/shiv/dfsdata/namenode’: No such file or directory
+//shiv@shivam-VirtualBox:~$ mkdir /home/hdoop/dfsdata/namenode
+//mkdir: cannot create directory ‘/home/hdoop/dfsdata/namenode’: No such file or directory
+
+shiv@shivam-VirtualBox:~$  sudo mkdir /dfsdata
+shiv@shivam-VirtualBox:~$  sudo mkdir /dfsdata/namenode
+shiv@shivam-VirtualBox:~$  sudo mkdir /dfsdata/datanode
+
+//shiv@shivam-VirtualBox:~$ sudo chmod -777 /home/shiv/dfsdata/namenode
+//chmod: cannot access '/home/shiv/dfsdata/namenode': No such file or directory
+
+shiv@shivam-VirtualBox:~$ sudo chmod -777 /dfsdata/namenode
+shiv@shivam-VirtualBox:~$ sudo chown -R shiv:hadoop /dfsdata/namenode
+shiv@shivam-VirtualBox:~$ sudo chmod -777 /dfsdata/datanode
+shiv@shivam-VirtualBox:~$ sudo chown -R shiv:hadoop /dfsdata/datanode
+
+shiv@shivam-VirtualBox:~$  sudo nano $HADOOP_HOME/etc/hadoop/mapred-site.xml.template
+shiv@shivam-VirtualBox:~$  sudo nano $HADOOP_HOME/etc/hadoop/yarn-site.xml
+  
+shiv@shivam-VirtualBox:~$  hdfs namenode -format
+ 
+ 
+We need to see this msg, which confirm us that NameNode at particular machine is down.
+
+shiv@shivam-VirtualBox:~$ cd hadoop-2.7.2/sbin/
+shiv@shivam-VirtualBox:~/hadoop-2.7.2/sbin$ start-all.sh
+ 
+ 
+shiv@shivam-VirtualBox:~/hadoop-2.7.2/sbin$ jps
+----output---
+3714 NodeManager
+3202 DataNode
+4003 Jps
+3046 NameNode
+3420 SecondaryNameNode
+3565 ResourceManager
+----output---
+
+
+shiv@shivam-VirtualBox:~/hadoop-2.7.2/sbin$ cd
+
+shiv@shivam-VirtualBox:~$ export HADOOP_CLASSPATH=$(hadoop classpath)
+
+shiv@shivam-VirtualBox:~$ echo $HADOOP_CLASSPATH
+
+shiv@shivam-VirtualBox:~$ hadoop fs -mkdir /wordcount
+ 
+shiv@shivam-VirtualBox:~$ hadoop fs -mkdir /wordcount/input
+
+shiv@shivam-VirtualBox:~$ hadoop fs -put '/home/shiv/Desktop/wordcount/input_data/input.txt' /wordcount/input
+
+shiv@shivam-VirtualBox:~$ cd /home/shiv/D
+---output---
+Desktop/   Documents/ Downloads/
+---output---
+
+shiv@shivam-VirtualBox:~$ cd /home/shiv/Desktop/wordcount/
+  
+shiv@shivam-VirtualBox:~/Desktop/wordcount$ javac -classpath ${HADOOP_CLASSPATH} -d '/home/shiv/Desktop/wordcount/classes' '/home/shiv/Desktop/wordcount/WordCount.java'
+
+shiv@shivam-VirtualBox:~/Desktop/wordcount$ jar -cvf wordcount1.jar -C classes/ .
+
+shiv@shivam-VirtualBox:~/Desktop/wordcount$ hadoop jar '/home/shiv/Desktop/wordcount/wordcount1.jar' WordCount /wordcount/input /wordcount/output
+ 
+shiv@shivam-VirtualBox:~/Desktop/wordcount$ hadoop dfs -cat /wordcount/output/*
